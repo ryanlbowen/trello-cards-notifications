@@ -1,0 +1,63 @@
+<html>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+	
+	var pollInterval = 1000 * 30;
+		
+	function startRequest()
+	{
+		checkNotifications();
+		window.setTimeout(startRequest, pollInterval);
+	}
+
+	function checkNotifications(){
+		console.log("checking notifications");
+	
+		var onAuthorize = function() {
+			$("#boards").empty();
+			
+			Trello.members.get("me", function(member){
+				
+					Trello.members.get("me", function(member){
+						
+						var num = 0;
+						
+						Trello.get("members/me/notifications", function(nots) {
+							$.each(nots, function(ix, noti) {
+								if(noti.unread == true)
+								{
+									num++;
+								}	
+							});
+							
+							if(num == 0)
+							{
+								chrome.browserAction.setBadgeText({text: "0"});		
+								chrome.browserAction.setBadgeBackgroundColor({color:[187, 187, 187, 255]});
+							}
+							else
+							{
+								num += "";
+								chrome.browserAction.setBadgeText({text: num});	
+								chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
+							}
+						});
+					});
+			});
+		};
+			  
+		Trello.authorize({
+			interactive:false,
+			success: onAuthorize
+		});
+	}
+
+</script>
+
+
+<body onload='startRequest()'></body>
+
+
+</html>

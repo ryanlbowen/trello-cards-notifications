@@ -1,0 +1,152 @@
+<html>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+<style type="text/css">
+
+	body {
+		width:335px;
+		background-color:#164b69;
+		font-family:Helvetica, sans-serif;
+	}
+	
+	#output {
+		width:455px;
+		background:#FFF;
+		border:1px solid #FFF;
+		padding:10px;
+		border-radius:10px;
+	}
+	
+	.card {
+		width:285px;
+		border-radius:5px;
+		background-color:#FFF;
+		padding:5px;
+		margin-bottom:5px;
+		border:1px solid #BBB;
+		list-style-type:none;
+	}
+	
+	a {
+		text-decoration:none;
+		color:#000;
+	}
+	
+	.board {
+		width:300px;
+		background:#e3e3e3;
+		border-radius:5px;
+		padding:10px;
+		margin-bottom:5px;
+	}
+	
+	.subscript {
+		float:right;
+		font-size:10px;
+		margin-top:-10px;
+		color:#BBB;
+	}
+	
+	#auth {
+		text-align:center;
+		font-weight:bold;
+	}
+	
+	#auth a {
+		color:#EEE;
+		text-decoration:none;
+	}
+	
+	#auth a:hover {
+		border-bottom:1px solid #EEE;
+	}
+	
+		
+</style>
+
+<body>
+	<div id="auth">
+		<script type="text/javascript">
+	  		document.write("<a href="+chrome.extension.getURL('options.html')+" target='_blank'>Connect to Trello</a>");
+		</script>
+  	</div>
+
+	<div id="boards"></div>
+</body>
+
+<script type="text/javascript">
+	
+	if(localStorage['auth'] == '1')
+	{
+		$("#auth").hide();
+		$("#boards").show();
+		
+		var onAuthorize = function() {
+			$("#boards").empty();
+			
+			Trello.members.get("me", function(member){
+			
+				var num = 0;
+			
+				Trello.get("members/me/notifications", function(nots) {
+					
+					$.each(nots, function(ix, noti) {
+						if(noti.unread == true)
+						{
+							num++;
+						}
+					});
+					
+					if(num == 0)
+					{
+						chrome.browserAction.setBadgeText({text: "0"});
+						chrome.browserAction.setBadgeBackgroundColor({color:[187, 187, 187, 255]});
+					}
+					else
+					{
+						num += "";
+						chrome.browserAction.setBadgeText({text: num});
+						chrome.browserAction.setBadgeBackgroundColor({color:[208, 0, 24, 255]});
+					}
+				});
+				
+				var $boards = $("<div>").html("<font color='white'>Loading Boards...</font>").appendTo("#boards");
+				Trello.get("members/me/boards/pinned", function(boards) {
+					$boards.empty();
+					$.each(boards, function(i, board) {
+						$("<div id='" + board.id + "' class='board'>").html("<a href='http://trello.com/board/"+ board.name + "/" + board.id + "' target='trello'><b>"+board.name+"</b></a>").appendTo($boards);
+					});
+				});
+			
+				var $cards = $("<div>").text("Loading Cards...").appendTo("#output");
+		
+				Trello.get("members/me/cards/open", function(cards) {
+					$cards.empty();
+					$.each(cards, function(ix, card) {
+						Trello.get("lists/"+card.idList, function(lists) {
+							$("<a id='card_"+card.idBoard+"'>").attr({href: card.url, target: "trello"}).html("<li id='"+card.idList+"' class='card'>"+card.name+"<br /><div class='subscript'>"+lists.name+"</div></li>").appendTo("#"+card.idBoard);
+						});				
+					});
+				});
+				
+			});
+		
+		};
+			  
+		Trello.authorize({
+			interactive:false,
+			success: onAuthorize
+		});
+	}
+	else
+	{
+		$("#auth").show();
+		$("#boards").hide();	
+		
+	}
+	
+
+</script>
+
+</html>
