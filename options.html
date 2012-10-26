@@ -71,7 +71,8 @@
 	$("#connectLink")
 	.click(function(){
 		Trello.authorize({
-			success: onAuthorize
+			success: onAuthorize,
+			name: 'Cards + Notifications for Trello'
 		})
 	});
 		
